@@ -10,8 +10,17 @@ export function activate(context: vscode.ExtensionContext) {
 	const fileDataProvider = new FileDataProvider();
     vscode.window.registerTreeDataProvider('sidebarDemoView', fileDataProvider);
 
-	const openFileCommand = vscode.commands.registerCommand('sidebar-demo.openFile', (fileName: string) => {
-		vscode.window.showInformationMessage(`Open file: ${fileName}`);
+	const openFileCommand = vscode.commands.registerCommand('sidebar-demo.openFile', (fullPath: string) => {
+		const fileUri = vscode.Uri.file(fullPath);
+
+		vscode.commands.executeCommand('git.openChange', fileUri)
+			.then(() => {
+				// Successfully opened the file in git diff view
+			}, (error) => {
+				// If there was an error (e.g., no changes), open the file normally
+				vscode.window.showInformationMessage('No changes to show in Git. Opening the file normally.');
+				vscode.commands.executeCommand('vscode.open', fileUri);
+			});
 	});
 
 	context.subscriptions.push(openFileCommand);

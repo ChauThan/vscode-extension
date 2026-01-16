@@ -15,17 +15,18 @@ export class FileDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
 
         const fileNames = await this.getChangedFilesFromGit();
 
+        const rootPath = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
         const treeItems = fileNames.map(fileName => {
             const treeItem = new vscode.TreeItem(fileName, vscode.TreeItemCollapsibleState.None);
            
+            const fullPath = path.join(rootPath, fileName);
             treeItem.command = {
                 command: 'sidebar-demo.openFile',
                 title: 'Open File',
-                arguments: [fileName]
+                arguments: [fullPath]
             };
 
             treeItem.iconPath = new vscode.ThemeIcon('file');
-
             return treeItem;
         });
 
