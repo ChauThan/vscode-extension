@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as cp from 'child_process';
+import * as path from 'path';
 
 export class FileDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>{
 
@@ -6,12 +8,12 @@ export class FileDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
         return element;
     }
 
-    getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
         if(element){
-            return Promise.resolve([]);
+            return [];
         }
 
-        const fileNames = ['src/controller.ts', 'src/view.ts', 'README.md', 'package.json'];
+        const fileNames = await this.getChangedFilesFromGit();
 
         const treeItems = fileNames.map(fileName => {
             const treeItem = new vscode.TreeItem(fileName, vscode.TreeItemCollapsibleState.None);
@@ -27,6 +29,25 @@ export class FileDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
             return treeItem;
         });
 
-        return Promise.resolve(treeItems);
+        return treeItems;
+    }
+
+    private getChangedFilesFromGit(): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            if(!vscode.workspace.workspaceFolders) {
+                return resolve([]);
+            }
+
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+            cp.exec('git diff --name-only', { cwd: rootPath }, (err, stdout, stderr) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                const changedFiles = stdout.split('\n').filter(file => file.length > 0);
+                resolve(changedFiles);
+            });
+        });
     }
 }
