@@ -11,10 +11,22 @@ export class FileDataProvider implements vscode.TreeDataProvider<vscode.TreeItem
             return Promise.resolve([]);
         }
 
-        return Promise.resolve([
-            new vscode.TreeItem('src/controller.ts', vscode.TreeItemCollapsibleState.None),
-            new vscode.TreeItem('src/view.ts', vscode.TreeItemCollapsibleState.None),
-            new vscode.TreeItem('src/README.md', vscode.TreeItemCollapsibleState.None)
-        ]);
+        const fileNames = ['src/controller.ts', 'src/view.ts', 'README.md', 'package.json'];
+
+        const treeItems = fileNames.map(fileName => {
+            const treeItem = new vscode.TreeItem(fileName, vscode.TreeItemCollapsibleState.None);
+           
+            treeItem.command = {
+                command: 'sidebar-demo.openFile',
+                title: 'Open File',
+                arguments: [fileName]
+            };
+
+            treeItem.iconPath = new vscode.ThemeIcon('file');
+
+            return treeItem;
+        });
+
+        return Promise.resolve(treeItems);
     }
 }

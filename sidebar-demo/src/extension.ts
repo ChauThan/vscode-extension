@@ -10,6 +10,12 @@ export function activate(context: vscode.ExtensionContext) {
 	const fileDataProvider = new FileDataProvider();
     vscode.window.registerTreeDataProvider('sidebarDemoView', fileDataProvider);
 
+	const openFileCommand = vscode.commands.registerCommand('sidebar-demo.openFile', (fileName: string) => {
+		vscode.window.showInformationMessage(`Open file: ${fileName}`);
+	});
+
+	context.subscriptions.push(openFileCommand);
+
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "sidebar-demo" is now active!');
