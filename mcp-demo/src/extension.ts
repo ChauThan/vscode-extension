@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as http from 'http';
+import path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -20,6 +21,15 @@ export function activate(context: vscode.ExtensionContext) {
 
     server.listen(3456, '127.0.0.1', () => {
         console.log('✅ Server is listening on http://127.0.0.1:3456');
+    });
+
+	const mcpProvider = vscode.lm.registerMcpServerDefinitionProvider('my-mcp-id', {
+        provideMcpServerDefinitions(token) {
+            // Reference the path to the compiled MCP server script
+            const serverPath = path.join(context.extensionPath, 'out', 'mcp-server.js');
+            
+            return [new vscode.McpStdioServerDefinition('Demo MCP Server', 'node', [serverPath])];
+        }
     });
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
