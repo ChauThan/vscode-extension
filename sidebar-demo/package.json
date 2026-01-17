@@ -28,6 +28,26 @@
           "name": "Sidebar Demo View"
         }
       ]
+    },
+    "commands": [
+      {
+        "command": "sidebarDemo.openFile",
+        "title": "Open File"
+      },
+      {
+        "command": "sidebarDemo.saveComment",
+        "title": "Save Comment",
+        "icon": "$(save)"
+      }
+    ],
+    "menus": {
+      "comments/commentThread/context": [
+        {
+          "command": "sidebarDemo.saveComment",
+          "group": "inline@1",
+          "when": "commentThreadIsEmpty"
+        }
+      ]
     }
   },
   "scripts": {
