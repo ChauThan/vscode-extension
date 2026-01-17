@@ -3,20 +3,41 @@
 import * as vscode from 'vscode';
 import { FileDataProvider } from './FileDataProvider';
 import { ReviewController } from './ReviewController';
+import { getChangedLines } from './GitUtils';
+import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+	const reviewController = new ReviewController(context);
+
 	const fileDataProvider = new FileDataProvider();
-    vscode.window.registerTreeDataProvider('sidebarDemoView', fileDataProvider);
+	vscode.window.registerTreeDataProvider('sidebarDemoView', fileDataProvider);
 
 	const openFileCommand = vscode.commands.registerCommand('sidebar-demo.openFile', (fullPath: string) => {
 		const fileUri = vscode.Uri.file(fullPath);
 
+		const rootPath = vscode.workspace.workspaceFolders
+			? vscode.workspace.workspaceFolders[0].uri.fsPath
+			: "";
+		const relativePath = path.relative(rootPath, fullPath);
+
 		vscode.commands.executeCommand('git.openChange', fileUri)
-			.then(() => {
+			.then(async () => {
 				// Successfully opened the file in git diff view
+				const lines = await getChangedLines(fullPath);
+				if (lines.length > 0) {
+					lines.forEach(line => {
+						reviewController.addSystemComment(
+							fileUri,
+							line,
+							"⚠️ SYSTEM: This line was recently modified — please review carefully!"
+						);
+					});
+				} else {
+					vscode.window.showInformationMessage("This file doesn't appear to have changes compared to HEAD.");
+				}
 			}, (error) => {
 				// If there was an error (e.g., no changes), open the file normally
 				vscode.window.showInformationMessage('No changes to show in Git. Opening the file normally.');
@@ -26,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(openFileCommand);
 
-	new ReviewController(context);
+
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
@@ -45,4 +66,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

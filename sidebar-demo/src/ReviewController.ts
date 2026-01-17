@@ -39,6 +39,19 @@ export class ReviewController {
 
         thread.comments = [...thread.comments, newComment];
     }
+
+    public addSystemComment(uri: vscode.Uri, line: number, message: string) {
+        const range = new vscode.Range(line, 0, line, 0);
+        const thread = this.controller.createCommentThread(uri, range, []);
+        const systemComment = new NoteComment(
+            message,
+            vscode.CommentMode.Preview,
+            { name: 'System' },
+            thread
+        );
+        thread.comments = [systemComment];
+        thread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
+    }
 }
 
 class NoteComment implements vscode.Comment {
