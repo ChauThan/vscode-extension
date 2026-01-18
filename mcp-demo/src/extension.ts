@@ -8,6 +8,15 @@ let timeLeft = 0;
 let timerInterval: NodeJS.Timeout | undefined;
 let isRunning = false;
 
+function stopPomodoro() {
+    isRunning = false;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+
+    vscode.window.showInformationMessage('Pomodoro session stopped.');
+}
+
 function startPomodoro() {
     if (timerInterval) {
         clearInterval(timerInterval);
@@ -40,7 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(startCmd);
 
     const server = http.createServer((req, res) => {
-        if (req.url === '/status') {
+        const url = new URL(req.url || '', `http://${req.headers.host}`);
+
+        if (url.pathname === '/status') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
 
             const minutes = Math.floor(timeLeft / 60);
@@ -53,12 +64,30 @@ export function activate(context: vscode.ExtensionContext) {
                 message: isRunning ? "Focus on your work!" : "Take a break!"
             }));
         }
-        else {
-            res.writeHead(404);
-            res.end(JSON.stringify({ error: "Endpoint not found" }));
+
+        if (url.pathname === '/control') {
+            const action = url.searchParams.get('action');
+            if (action === 'start') {
+                if (!isRunning) {
+                    startPomodoro();
+                }
+                res.end(JSON.stringify({ status: "Pomodoro started" }));
+            }
+            else if (action === 'stop') {
+                if (isRunning) {
+                    stopPomodoro();
+                }
+                res.end(JSON.stringify({ status: "Pomodoro stopped" }));
+            }
+            else {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: "Invalid action. Use 'start' or 'stop'." }));
+            }
+            return;
         }
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: "Endpoint not found" }));
     });
 
     server.listen(3456, '127.0.0.1', () => {

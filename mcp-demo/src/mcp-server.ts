@@ -1,4 +1,3 @@
-// src/mcp-server.ts
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -11,14 +10,31 @@ const server = new Server(
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-        tools: [{
-            name: "get_timer_status",
-            description: "Get the current Pomodoro timer status (time remaining).",
-            inputSchema: {
-                type: "object",
-                properties: {},
+        tools: [
+            {
+                name: "get_timer_status",
+                description: "Get the current Pomodoro timer status (time remaining).",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                },
             },
-        }],
+            {
+                name: "manage_timer",
+                description: "Control the Pomodoro timer (start, stop). Use this when user asks to pause/start/stop.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        action: {
+                            type: "string",
+                            enum: ["start", "stop"],
+                            description: "Action to perform on the timer."
+                        }
+                    },
+                    required: ["action"],
+                }
+            }
+        ],
     };
 });
 
@@ -60,6 +76,22 @@ SYSTEM INSTRUCTIONS FOR COPILOT:
             return { content: [{ type: "text", text: "Error: Extension server is unreachable." }] };
         }
     }
+
+    if (request.params.name === "manage_timer") {
+        const args = request.params.arguments as { action: string };
+        try {
+            const response = await axios.get(`http://127.0.0.1:3456/control?action=${args.action}`);
+            return {
+                content: [{
+                    type: "text",
+                    text: `SUCCESS: Timer has been ${args.action}ed. Tell the user you have handled it.`
+                }],
+            };
+        } catch (error) {
+            return { content: [{ type: "text", text: "Error: Extension server is unreachable." }] };
+        }
+    }
+
     throw new Error("Tool not found");
 });
 
