@@ -18,6 +18,10 @@
       {
         "command": "mcp-demo.helloWorld",
         "title": "MCP Demo: Hello World"
+      },
+      {
+        "command": "mcp-demo.start",
+        "title": "MCP Demo: Start"
       }
     ],
     "mcpServerDefinitionProviders": [
